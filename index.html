@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>寒霜啟示錄 - 兵工廠爭奪戰戰術分配板</title>
+    <style>
+        :root {
+            --bg-dark: #070d17;
+            --panel-bg: rgba(13, 22, 38, 0.95);
+            --border-color: #1e3557;
+            --accent-blue: #00d2ff;
+            --accent-gold: #ffb703;
+            --accent-red: #ff4d4d;
+            --accent-green: #2ec4b6;
+            --text-light: #e0e6ed;
+            --text-dim: #8ba0b5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            background-image: 
+                radial-gradient(circle at 50% 30%, rgba(0, 210, 255, 0.08) 0%, transparent 70%),
+                linear-gradient(to bottom, #070d17, #0b1424);
+            min-height: 100vh;
+            padding: 12px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 12px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 1.4rem;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .subtitle {
+            color: var(--accent-blue);
+            font-size: 0.75rem;
+            margin-top: 2px;
+        }
+
+        /* 頂部階段切換頁籤 (手機端靠頂固定) */
+        .phase-tabs-container {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(7, 13, 23, 0.95);
+            padding: 8px 0;
+            margin-bottom: 15px;
+            backdrop-filter: blur(8px);
+        }
+
+        .phase-tabs {
+            display: flex;
+            justify-content: flex-start;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: none; /* Firefox */
+        }
+
+        .phase-tabs::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
+        }
+
+        .tab-btn {
+            background: rgba(15, 28, 48, 0.9);
+            border: 1px solid var(--border-color);
+            color: var(--text-dim);
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #1e3c72 0%, #00d2ff 100%);
+            color: #fff;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.4);
+        }
+
+        /* 主容器：電腦視窗雙欄，手機端單欄 */
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-width: 1850px;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 1024px) {
+            body { padding: 20px; }
+            h1 { font-size: 2rem; }
+            .subtitle { font-size: 0.9rem; }
+            .main-container {
+                display: grid;
+                grid-template-columns: 340px 1fr;
+                gap: 25px;
+            }
+            .phase-tabs {
+                justify-content: center;
+            }
+        }
+
+        /* 左側控制面板 */
+        .control-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+        }
+
+        .panel-section {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .panel-section h3 {
+            color: var(--accent-gold);
+            font-size: 0.95rem;
+            border-left: 3px solid var(--accent-gold);
+            padding-left: 6px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            background: rgba(4, 9, 17, 0.9);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: #fff;
+            padding: 8px;
+            resize: vertical;
+            font-size: 0.85rem;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #fff;
+            border: 1px solid var(--accent-blue);
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            flex: 1;
+            min-width: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button.btn-danger {
+            background: linear-gradient(135deg, #721e1e 0%, #982a2a 100%);
+            border-color: var(--accent-red);
+        }
+
+        button.btn-gold {
+            background: linear-gradient(135deg, #8a6d1c 0%, #b8860b 100%);
+            border-color: var(--accent-gold);
+        }
+
+        button.btn-green {
+            background: linear-gradient(135deg, #166534 0%, #15803d 100%);
+            border-color: var(--accent-green);
+        }
+
+        .stats {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .stats span {
+            color: var(--accent-blue);
+            font-weight: bold;
+        }
+
+        /* 地圖區域：手機為單欄或雙欄動態列表，電腦為 5x5 網格 */
+        .map-container {
+            position: relative;
+            background: rgba(10, 18, 32, 0.85);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px;
+        }
+
+        @media (min-width: 1024px) {
+            .map-container {
+                min-height: 850px;
+                padding: 16px;
+                grid-template-columns: repeat(5, 1fr);
+                grid-template-rows: repeat(5, 1fr);
+                gap: 12px;
+                background-image: 
+                    linear-gradient(rgba(30, 53, 87, 0.25) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(30, 53, 87, 0.25) 1px, transparent 1px);
+                background-size: 40px 40px;
+            }
+        }
+
+        /* 據點卡片 */
+        .node-card {
+            background: rgba(15, 28, 48, 0.95);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .node-card:active {
+            transform: scale(0.98);
+        }
+
+        .node-card.is-priority {
+            border: 1.5px solid var(--accent-gold);
+            box-shadow: 0 0 10px rgba(255, 183, 3, 0.25);
+        }
+
+        .node-card.dimmed {
+            opacity: 0.35;
+            filter: grayscale(0.7);
+            pointer-events: none;
+        }
+
+        .node-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 4px;
+            gap: 4px;
+        }
+
+        .node-title-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .node-title {
+            font-weight: bold;
+            font-size: 0.85rem;
+            color: #fff;
+            line-height: 1.2;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .node-en {
+            font-size: 0.65rem;
+            color: var(--accent-blue);
+        }
+
+        .phase-badge {
+            font-size: 0.6rem;
+            color: var(--accent-gold);
+            background: rgba(255, 183, 3, 0.15);
+            padding: 2px 4px;
+            border-radius: 3px;
+            white-space: nowrap;
+        }
+
+        .type-core { border-top: 3.5px solid #ff4d4d; }
+        .type-core .node-title { color: #ff9999; }
+        .type-high { border-top: 3.5px solid #ffb703; }
+        .type-high .node-title { color: #ffd666; }
+        .type-buff { border-top: 3.5px solid #00d2ff; }
+        .type-buff .node-title { color: #80e5ff; }
+        .type-gather { border-top: 3.5px solid #2ec4b6; }
+        .type-gather .node-title { color: #80ffea; }
+        .type-normal { border-top: 3.5px solid #8ba0b5; }
+
+        .node-info {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            line-height: 1.2;
+        }
+
+        .assigned-list {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .player-chip {
+            background: rgba(0, 210, 255, 0.12);
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            color: #fff;
+            font-size: 0.75rem;
+            padding: 4px 6px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .empty-slot {
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 0.72rem;
+            padding: 4px;
+            border-radius: 4px;
+            text-align: center;
+            background: rgba(0,0,0,0.2);
+        }
+
+        /* 桌面端的 5x5 電腦地圖網格定位 */
+        @media (min-width: 1024px) {
+            .pos-p1  { grid-column: 2; grid-row: 1; }
+            .pos-p2  { grid-column: 4; grid-row: 1; }
+            .pos-p3  { grid-column: 3; grid-row: 2; }
+            .pos-p4  { grid-column: 1; grid-row: 2; }
+            .pos-p5  { grid-column: 5; grid-row: 2; }
+            .pos-p6  { grid-column: 3; grid-row: 3; }
+            .pos-p7  { grid-column: 1; grid-row: 4; }
+            .pos-p8  { grid-column: 5; grid-row: 4; }
+            .pos-p9  { grid-column: 3; grid-row: 4; }
+            .pos-p10 { grid-column: 2; grid-row: 5; }
+            .pos-p11 { grid-column: 4; grid-row: 5; }
+
+            .pos-ga  { grid-column: 2; grid-row: 2; }
+            .pos-gb  { grid-column: 2; grid-row: 4; }
+            .pos-gc  { grid-column: 4; grid-row: 2; }
+            .pos-gd  { grid-column: 4; grid-row: 4; }
+        }
+
+        /* Modal 彈窗 (手機滿版化優化) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .modal-content {
+            background: var(--panel-bg);
+            border: 1px solid var(--accent-blue);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 600px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 90vh;
+        }
+
+        .player-selector-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 8px;
+            overflow-y: auto;
+            max-height: 50vh;
+            padding-right: 4px;
+        }
+
+        .player-item {
+            background: rgba(5, 12, 22, 0.9);
+            border: 1px solid var(--border-color);
+            padding: 10px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .player-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+
+        .player-item.selected {
+            background: rgba(0, 210, 255, 0.2);
+            border-color: var(--accent-blue);
+            color: var(--accent-gold);
+        }
+
+        .player-item.disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>❄️ 寒霜啟示錄 - 兵工廠戰術板 🛡️</h1>
+        <div class="subtitle">Whiteout Survival - Mobile Tactical Allocator</div>
+    </header>
+
+    <!-- 頂部階段切換列 (手機滾動時固定) -->
+    <div class="phase-tabs-container">
+        <div class="phase-tabs">
+            <button class="tab-btn active" onclick="setPhaseFilter('all')">🌐 全部顯示 (All)</button>
+            <button class="tab-btn" onclick="setPhaseFilter('階段一')">⏱️ 階段一 (3分)</button>
+            <button class="tab-btn" onclick="setPhaseFilter('階段二')">⏱️ 階段二 (15分)</button>
+            <button class="tab-btn" onclick="setPhaseFilter('階段三')">⏱️ 階段三 (20分)</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- 控制面板 -->
+        <div class="control-panel">
+            <div class="panel-section">
+                <h3>👥 聯盟名單預設</h3>
+                <textarea id="playerListInput" placeholder="在此貼上玩家 ID (一行一個)..."></textarea>
+                <div class="stats">
+                    目前人數：<span id="playerCount">0</span> 人
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3>💾 名單記憶</h3>
+                <div class="btn-group">
+                    <button class="btn-green" onclick="saveCustomPreset()">💾 儲存預設名單</button>
+                    <button onclick="loadCustomPreset()">🔄 載入自訂</button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3>⚡ 戰術動作</h3>
+                <div class="btn-group">
+                    <button class="btn-gold" onclick="randomAssign()">🎲 一鍵隨機分配</button>
+                    <button class="btn-danger" onclick="clearSlots()">🧹 清空佈署</button>
+                </div>
+                <div class="btn-group" style="margin-top: 4px;">
+                    <button onclick="exportText()">📋 複製戰術文字</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 戰術地圖區 -->
+        <div class="map-container" id="mapNodes"></div>
+    </div>
+
+    <!-- 人員勾選 Modal -->
+    <div class="modal" id="selectorModal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 id="modalNodeTitle" style="color: var(--accent-gold); font-size: 1rem;">選擇指派玩家</h3>
+                <button onclick="closeModal()" style="min-width: auto; background: none; border: none; color: #fff; font-size: 1.6rem; cursor: pointer;">&times;</button>
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-dim);" id="modalNodeSubtitle"></div>
+            
+            <div class="player-selector-grid" id="playerSelectorGrid"></div>
+
+            <div class="btn-group" style="margin-top: 8px;">
+                <button class="btn-gold" onclick="saveNodeSelection()">確認指派</button>
+                <button onclick="closeModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 文字匯出 Modal -->
+    <div class="modal" id="exportModal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="color: var(--accent-gold); font-size: 1rem;">📋 聯盟頻道戰術文字</h3>
+                <button onclick="closeExportModal()" style="min-width: auto; background: none; border: none; color: #fff; font-size: 1.6rem; cursor: pointer;">&times;</button>
+            </div>
+            <textarea id="exportArea" readonly style="height: 280px; font-family: monospace; font-size: 0.8rem;"></textarea>
+            <div class="btn-group">
+                <button class="btn-gold" onclick="copyExportText()">複製文字到剪貼簿</button>
+                <button onclick="closeExportModal()">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SYSTEM_DEFAULT_PLAYERS = [
+            "皇家_車頭亞瑟", "皇家_主力蘭斯", "皇家_高戰鮑斯", "皇家_高戰加雷斯",
+            "雇傭兵_車頭A", "雇傭兵_隊員B", "雇傭兵_隊員C", "雇傭兵_隊員D",
+            "軍火庫_主力火龍", "軍火庫_主力冰帝", "軍火庫_高戰影武", "軍火庫_高戰獵人",
+            "蒸汽鍋爐_隊長1", "蒸汽鍋爐_隊員2", "蒸汽鍋爐_隊員3", "蒸汽鍋爐_隊員4",
+            "中轉站_疾風", "中轉站_閃電", "中轉站_強森", "中轉站_鐵壁",
+            "實驗1_車頭", "實驗1_成員1", "實驗1_成員2", "實驗1_成員3",
+            "實驗2_車頭", "實驗2_成員1", "實驗2_成員2", "實驗2_成員3",
+            "維修1_隊長", "維修1_隊員A", "維修1_隊員B", "維修1_隊員C",
+            "維修2_隊長", "維修2_隊員A", "維修2_隊員B", "維修2_隊員C",
+            "維修3_隊長", "維修3_隊員A", "維修3_隊員B", "維修3_隊員C",
+            "維修4_隊長", "維修4_隊員A", "維修4_隊員B", "維修4_隊員C",
+            "武器庫A_小號1", "武器庫A_小號2", 
+            "武器庫B_小號3", "武器庫B_小號4",
+            "武器庫C_小號5", "武器庫C_小號6", 
+            "武器庫D_小號7", "武器庫D_小號8"
+        ];
+
+        const nodesData = [
+            { id: 'transit', name: '中轉站', en: 'Transit', type: 'buff', pos: 'pos-p11', slots: 4, phase: '階段一', tag: '遷城CD-50%', priority: true, info: '首佔 1,200 | 240/分' },
+            { id: 'boiler', name: '蒸汽鍋爐', en: 'Boiler Room', type: 'buff', pos: 'pos-p1', slots: 4, phase: '階段一', tag: '控制時間-50%', priority: true, info: '首佔 1,200 | 240/分' },
+            { id: 'test_1', name: '1號武器實驗廠', en: 'Prototype Site I', type: 'high', pos: 'pos-p4', slots: 4, phase: '階段一', tag: '高分據點', priority: true, info: '首佔 6,000 | 1,200/分' },
+            { id: 'test_2', name: '2號武器實驗廠', en: 'Prototype Site II', type: 'high', pos: 'pos-p8', slots: 4, phase: '階段一', tag: '高分據點', priority: true, info: '首佔 6,000 | 1,200/分' },
+            { id: 'repair_1', name: '1號武器維修廠', en: 'Repair Facility I', type: 'normal', pos: 'pos-p7', slots: 4, phase: '階段一', tag: '維修廠', priority: false, info: '首佔 3,000 | 600/分' },
+            { id: 'repair_2', name: '2號武器維修廠', en: 'Repair Facility II', type: 'normal', pos: 'pos-p5', slots: 4, phase: '階段一', tag: '維修廠', priority: false, info: '首佔 3,000 | 600/分' },
+            { id: 'repair_3', name: '3號武器維修廠', en: 'Repair Facility III', type: 'normal', pos: 'pos-p10', slots: 4, phase: '階段一', tag: '維修廠', priority: false, info: '首佔 3,000 | 600/分' },
+            { id: 'repair_4', name: '4號武器維修廠', en: 'Repair Facility IV', type: 'normal', pos: 'pos-p2', slots: 4, phase: '階段一', tag: '維修廠', priority: false, info: '首佔 3,000 | 600/分' },
+
+            { id: 'royal', name: '皇家兵工廠', en: 'Imperial Foundry', type: 'core', pos: 'pos-p6', slots: 4, phase: '階段二', tag: '最高分核心', priority: true, info: '首佔 9,000 | 1,800/分' },
+            { id: 'mercenary', name: '雇傭兵營地', en: 'Mercenary Camp', type: 'buff', pos: 'pos-p3', slots: 4, phase: '階段二', tag: '派兵削弱敵軍', priority: false, info: '首佔 1,200 | 240/分' },
+            { id: 'armory', name: '軍火庫', en: 'Munitions Warehouse', type: 'buff', pos: 'pos-p9', slots: 4, phase: '階段二', tag: '+15%傷 / -15%受傷', priority: false, info: '首佔 1,200 | 240/分' },
+
+            { id: 'gather_a', name: '武器庫 A', en: 'Weapon Workshop A', type: 'gather', pos: 'pos-ga', slots: 2, phase: '階段三', tag: '鍋爐/實驗1/傭兵營', priority: false, info: '軍工積分採集' },
+            { id: 'gather_b', name: '武器庫 B', en: 'Weapon Workshop B', type: 'gather', pos: 'pos-gb', slots: 2, phase: '階段三', tag: '維修1/維修3/軍火庫', priority: false, info: '軍工積分採集' },
+            { id: 'gather_c', name: '武器庫 C', en: 'Weapon Workshop C', type: 'gather', pos: 'pos-gc', slots: 2, phase: '階段三', tag: '維修4/維修2/傭兵營', priority: false, info: '軍工積分採集' },
+            { id: 'gather_d', name: '武器庫 D', en: 'Weapon Workshop D', type: 'gather', pos: 'pos-gd', slots: 2, phase: '階段三', tag: '實驗2/中轉站/軍火庫', priority: false, info: '軍工積分採集' }
+        ];
+
+        let assignments = {};
+        let currentNodeId = null;
+        let currentPhaseFilter = 'all';
+
+        function init() {
+            nodesData.forEach(node => assignments[node.id] = []);
+            loadCustomPreset();
+            renderMap();
+
+            document.getElementById('playerListInput').addEventListener('input', updatePlayerCount);
+        }
+
+        function setPhaseFilter(phase) {
+            currentPhaseFilter = phase;
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => {
+                if (btn.innerText.includes(phase) || (phase === 'all' && btn.innerText.includes('全部顯示'))) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            renderMap();
+        }
+
+        function saveCustomPreset() {
+            const list = getPlayerList();
+            if (list.length === 0) {
+                alert('請先輸入名單後再儲存！');
+                return;
+            }
+            localStorage.setItem('whiteout_custom_players', JSON.stringify(list));
+            alert('已成功儲存為預設名單！下次開啟網頁時會自動載入。');
+        }
+
+        function loadCustomPreset() {
+            const saved = localStorage.getItem('whiteout_custom_players');
+            const textarea = document.getElementById('playerListInput');
+            if (saved) {
+                try {
+                    textarea.value = JSON.parse(saved).join('\n');
+                } catch(e) {
+                    textarea.value = SYSTEM_DEFAULT_PLAYERS.join('\n');
+                }
+            } else {
+                textarea.value = SYSTEM_DEFAULT_PLAYERS.join('\n');
+            }
+            updatePlayerCount();
+        }
+
+        function updatePlayerCount() {
+            document.getElementById('playerCount').innerText = getPlayerList().length;
+        }
+
+        function getPlayerList() {
+            return document.getElementById('playerListInput').value
+                .split('\n')
+                .map(p => p.trim())
+                .filter(p => p !== '');
+        }
+
+        function renderMap() {
+            const container = document.getElementById('mapNodes');
+            container.innerHTML = '';
+
+            nodesData.forEach(node => {
+                const isDimmed = currentPhaseFilter !== 'all' && node.phase !== currentPhaseFilter;
+                const card = document.createElement('div');
+                card.className = `node-card type-${node.type} ${node.pos} ${node.priority ? 'is-priority' : ''} ${isDimmed ? 'dimmed' : ''}`;
+                
+                if (!isDimmed) {
+                    card.onclick = () => openSelectorModal(node.id);
+                }
+
+                const assigned = assignments[node.id] || [];
+                let listHTML = '';
+
+                for (let i = 0; i < node.slots; i++) {
+                    if (assigned[i]) {
+                        listHTML += `<div class="player-chip">👤 ${assigned[i]}</div>`;
+                    } else {
+                        listHTML += `<div class="empty-slot">${isDimmed ? '🔒 尚未開放' : '+ 點擊指派'}</div>`;
+                    }
+                }
+
+                card.innerHTML = `
+                    <div class="node-header">
+                        <div class="node-title-group">
+                            <div class="node-title">
+                                ${node.priority ? '⭐' : ''} ${node.name}
+                            </div>
+                            <div class="node-en">${node.en}</div>
+                        </div>
+                        <div class="phase-badge">${node.phase}</div>
+                    </div>
+                    <div class="node-info">${node.info}</div>
+                    <div class="assigned-list">
+                        ${listHTML}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function openSelectorModal(nodeId) {
+            currentNodeId = nodeId;
+            const node = nodesData.find(n => n.id === nodeId);
+            const allPlayers = getPlayerList();
+            
+            if (allPlayers.length === 0) {
+                alert('請先輸入或載入玩家名單！');
+                return;
+            }
+
+            document.getElementById('modalNodeTitle').innerText = `${node.name} (${node.en})`;
+            document.getElementById('modalNodeSubtitle').innerText = `名額：${node.slots} 人 | 已選：${(assignments[nodeId] || []).length} 人`;
+
+            const grid = document.getElementById('playerSelectorGrid');
+            grid.innerHTML = '';
+
+            const assignedElsewhere = new Set();
+            Object.keys(assignments).forEach(id => {
+                if (id !== nodeId) {
+                    assignments[id].forEach(p => assignedElsewhere.add(p));
+                }
+            });
+
+            const currentAssigned = new Set(assignments[nodeId] || []);
+
+            allPlayers.forEach(player => {
+                const item = document.createElement('div');
+                const isSelected = currentAssigned.has(player);
+                const isTaken = assignedElsewhere.has(player);
+
+                item.className = `player-item ${isSelected ? 'selected' : ''} ${isTaken ? 'disabled' : ''}`;
+                item.innerHTML = `
+                    <input type="checkbox" ${isSelected ? 'checked' : ''} ${isTaken ? 'disabled' : ''}>
+                    <span>${player}</span>
+                `;
+
+                if (!isTaken) {
+                    item.onclick = (e) => {
+                        const checkbox = item.querySelector('input');
+                        if (e.target.tagName !== 'INPUT') {
+                            checkbox.checked = !checkbox.checked;
+                        }
+                        
+                        const checkedCount = grid.querySelectorAll('input:checked').length;
+                        if (checkedCount > node.slots) {
+                            checkbox.checked = false;
+                            alert(`該據點上限為 ${node.slots} 人！`);
+                            return;
+                        }
+
+                        if (checkbox.checked) {
+                            item.classList.add('selected');
+                        } else {
+                            item.classList.remove('selected');
+                        }
+
+                        document.getElementById('modalNodeSubtitle').innerText = `名額：${node.slots} 人 | 已選：${grid.querySelectorAll('input:checked').length} 人`;
+                    };
+                }
+
+                grid.appendChild(item);
+            });
+
+            document.getElementById('selectorModal').style.display = 'flex';
+        }
+
+        function saveNodeSelection() {
+            const grid = document.getElementById('playerSelectorGrid');
+            const selected = [];
+            grid.querySelectorAll('.player-item.selected span').forEach(el => {
+                selected.push(el.innerText);
+            });
+
+            assignments[currentNodeId] = selected;
+            closeModal();
+            renderMap();
+        }
+
+        function closeModal() {
+            document.getElementById('selectorModal').style.display = 'none';
+        }
+
+        function clearSlots() {
+            nodesData.forEach(node => assignments[node.id] = []);
+            renderMap();
+        }
+
+        function randomAssign() {
+            let players = getPlayerList();
+            if (players.length === 0) {
+                alert('請先輸入玩家名單！');
+                return;
+            }
+
+            for (let i = players.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [players[i], players[j]] = [players[j], players[i]];
+            }
+
+            clearSlots();
+
+            let playerIndex = 0;
+            nodesData.forEach(node => {
+                assignments[node.id] = [];
+                for (let i = 0; i < node.slots; i++) {
+                    if (playerIndex < players.length) {
+                        assignments[node.id].push(players[playerIndex]);
+                        playerIndex++;
+                    }
+                }
+            });
+
+            renderMap();
+        }
+
+        function exportText() {
+            let output = "❄️【寒霜啟示錄 - 兵工廠戰術佈署】🛡️\n";
+            output += "===================================\n";
+
+            ['階段一', '階段二', '階段三'].forEach(phaseName => {
+                output += `\n【${phaseName} 據點】\n-------------------\n`;
+                const phaseNodes = nodesData.filter(n => n.phase === phaseName);
+                
+                phaseNodes.forEach(node => {
+                    const star = node.priority ? '⭐ ' : '';
+                    output += `📍 ${star}【${node.name} ${node.en}】(${node.tag})\n`;
+                    const list = assignments[node.id] || [];
+                    if (list.length > 0) {
+                        list.forEach((p, idx) => {
+                            output += `  ├ 負責人 ${idx + 1}: ${p}\n`;
+                        });
+                    } else {
+                        output += `  └ (待指派)\n`;
+                    }
+                });
+            });
+
+            output += "\n===================================\n";
+            output += "💡 核心戰術提醒：\n";
+            output += "1. 階段一(3分): ⭐務必搶佔【中轉站 Transit】與【蒸汽鍋爐 Boiler Room】！\n";
+            output += "2. 階段二(15分): 主力全力攻佔 ⭐【皇家兵工廠 Imperial Foundry】與【軍火庫 Munitions Warehouse】！\n";
+            output += "3. 階段三(20分): 安排人員至武器庫 A/B/C/D 採集軍工積分！";
+
+            document.getElementById('exportArea').value = output;
+            document.getElementById('exportModal').style.display = 'flex';
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').style.display = 'none';
+        }
+
+        function copyExportText() {
+            const area = document.getElementById('exportArea');
+            area.select();
+            document.execCommand('copy');
+            alert('已成功複製戰術文字！可以直接貼到 Discord 或 LINE 聯盟頻道。');
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
